@@ -525,6 +525,8 @@ auto Workspace::handle_clicked(GdkEventButton *bt) -> bool {
   else if (action == "activate") {
     const std::string command = "hyprctl dispatch workspace " + name_;
 	system(command.c_str());
+    const std::string command2 = "ydotool mousemove -x -1 -y 1";
+	system(command2.c_str());
   } else if (action == "close") {
     zext_workspace_handle_v1_remove(workspace_handle_);
   } else {
