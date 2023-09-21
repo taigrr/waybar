@@ -1,10 +1,14 @@
 #pragma once
+
 #include <functional>
 #include <list>
 #include <memory>
 #include <mutex>
 #include <string>
 #include <thread>
+#include <utility>
+
+#include "util/json.hpp"
 
 namespace waybar::modules::hyprland {
 
@@ -22,12 +26,14 @@ class IPC {
   void unregisterForIPC(EventHandler*);
 
   std::string getSocket1Reply(const std::string& rq);
+  Json::Value getSocket1JsonReply(const std::string& rq);
 
  private:
   void startIPC();
   void parseIPC(const std::string&);
 
   std::mutex callbackMutex;
+  util::JsonParser parser_;
   std::list<std::pair<std::string, EventHandler*>> callbacks;
 };
 

@@ -64,7 +64,7 @@ WorkspaceManager::WorkspaceManager(const std::string &id, const waybar::Bar &bar
 
 auto WorkspaceManager::workspace_comparator() const
     -> std::function<bool(std::unique_ptr<Workspace> &, std::unique_ptr<Workspace> &)> {
-  return [=](std::unique_ptr<Workspace> &lhs, std::unique_ptr<Workspace> &rhs) {
+  return [=, this](std::unique_ptr<Workspace> &lhs, std::unique_ptr<Workspace> &rhs) {
     auto is_name_less = lhs->get_name() < rhs->get_name();
     auto is_name_eq = lhs->get_name() == rhs->get_name();
     auto is_coords_less = lhs->get_coords() < rhs->get_coords();
@@ -73,7 +73,7 @@ auto WorkspaceManager::workspace_comparator() const
       try {
         auto is_number_less = std::stoi(lhs->get_name()) < std::stoi(rhs->get_name());
         return is_number_less;
-      } catch (std::invalid_argument) {
+      } catch (const std::invalid_argument &) {
       }
     }
 
@@ -209,8 +209,17 @@ WorkspaceGroup::WorkspaceGroup(const Bar &bar, Gtk::Box &box, const Json::Value 
 }
 
 auto WorkspaceGroup::fill_persistent_workspaces() -> void {
-  if (config_["persistent_workspaces"].isObject() && !workspace_manager_.all_outputs()) {
-    const Json::Value &p_workspaces = config_["persistent_workspaces"];
+  if (config_["persistent_workspaces"].isObject()) {
+    spdlog::warn(
+        "persistent_workspaces is deprecated. Please change config to use persistent-workspaces.");
+  }
+
+  if ((config_["persistent-workspaces"].isObject() ||
+       config_["persistent_workspaces"].isObject()) &&
+      !workspace_manager_.all_outputs()) {
+    const Json::Value &p_workspaces = config_["persistent-workspaces"].isObject()
+                                          ? config_["persistent-workspaces"]
+                                          : config_["persistent_workspaces"];
     const std::vector<std::string> p_workspaces_names = p_workspaces.getMemberNames();
 
     for (const std::string &p_w_name : p_workspaces_names) {

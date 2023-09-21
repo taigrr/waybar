@@ -190,9 +190,8 @@ auto waybar::modules::Backlight::update() -> void {
       event_box_.show();
       const uint8_t percent =
           best->get_max() == 0 ? 100 : round(best->get_actual() * 100.0f / best->get_max());
-      std::string desc =
-          fmt::format(fmt::runtime(format_), fmt::arg("percent", std::to_string(percent)),
-                      fmt::arg("icon", getIcon(percent)));
+      std::string desc = fmt::format(fmt::runtime(format_), fmt::arg("percent", percent),
+                                     fmt::arg("icon", getIcon(percent)));
       label_.set_markup(desc);
       getState(percent);
       if (tooltipEnabled()) {
@@ -202,7 +201,7 @@ auto waybar::modules::Backlight::update() -> void {
         }
         if (!tooltip_format.empty()) {
           label_.set_tooltip_text(fmt::format(fmt::runtime(tooltip_format),
-                                              fmt::arg("percent", std::to_string(percent)),
+                                              fmt::arg("percent", percent),
                                               fmt::arg("icon", getIcon(percent))));
         } else {
           label_.set_tooltip_text(desc);
@@ -245,7 +244,7 @@ void waybar::modules::Backlight::upsert_device(ForwardIt first, ForwardIt last, 
   check_nn(name);
 
   const char *actual_brightness_attr =
-      strncmp(name, "amdgpu_bl", 9) == 0 ? "brightness" : "actual_brightness";
+      strncmp(name, "amdgpu_bl", 9) == 0 || strcmp(name, "apple-panel-bl") == 0  ? "brightness" : "actual_brightness";
 
   const char *actual = udev_device_get_sysattr_value(dev, actual_brightness_attr);
   const char *max = udev_device_get_sysattr_value(dev, "max_brightness");
@@ -303,14 +302,6 @@ bool waybar::modules::Backlight::handleScroll(GdkEventScroll *e) {
   auto dir = AModule::getScrollDir(e);
   if (dir == SCROLL_DIR::NONE) {
     return true;
-  }
-
-  if (config_["reverse-scrolling"].asBool()) {
-    if (dir == SCROLL_DIR::UP) {
-      dir = SCROLL_DIR::DOWN;
-    } else if (dir == SCROLL_DIR::DOWN) {
-      dir = SCROLL_DIR::UP;
-    }
   }
 
   // Get scroll step

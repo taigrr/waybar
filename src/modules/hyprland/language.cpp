@@ -4,8 +4,7 @@
 #include <xkbcommon/xkbcommon.h>
 #include <xkbcommon/xkbregistry.h>
 
-#include <util/sanitize_str.hpp>
-
+#include "util/sanitize_str.hpp"
 #include "util/string.hpp"
 
 namespace waybar::modules::hyprland {
@@ -22,7 +21,7 @@ Language::Language(const std::string& id, const Bar& bar, const Json::Value& con
   initLanguage();
 
   label_.hide();
-  ALabel::update();
+  update();
 
   // register for hyprland ipc
   gIPC->registerForIPC("activelayout", this);
@@ -38,7 +37,10 @@ auto Language::update() -> void {
   std::lock_guard<std::mutex> lg(mutex_);
 
   std::string layoutName = std::string{};
-  if (config_.isMember("format-" + layout_.short_description)) {
+  if (config_.isMember("format-" + layout_.short_description + "-" + layout_.variant)) {
+    const auto propName = "format-" + layout_.short_description + "-" + layout_.variant;
+    layoutName = fmt::format(fmt::runtime(format_), config_[propName].asString());
+  } else if (config_.isMember("format-" + layout_.short_description)) {
     const auto propName = "format-" + layout_.short_description;
     layoutName = fmt::format(fmt::runtime(format_), config_[propName].asString());
   } else {
@@ -94,7 +96,6 @@ void Language::initLanguage() {
     spdlog::debug("hyprland language initLanguage found {}", layout_.full_name);
 
     dp.emit();
-
   } catch (std::exception& e) {
     spdlog::error("hyprland language initLanguage failed with {}", e.what());
   }
